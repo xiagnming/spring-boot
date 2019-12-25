@@ -77,6 +77,11 @@ public class WebMvcProperties {
 	private boolean ignoreDefaultModelOnRedirect = true;
 
 	/**
+	 * Whether to publish a ServletRequestHandledEvent at the end of each request.
+	 */
+	private boolean publishRequestHandledEvents = true;
+
+	/**
 	 * Whether a "NoHandlerFoundException" should be thrown if no Handler was found to
 	 * process a request.
 	 */
@@ -143,6 +148,14 @@ public class WebMvcProperties {
 		this.ignoreDefaultModelOnRedirect = ignoreDefaultModelOnRedirect;
 	}
 
+	public boolean isPublishRequestHandledEvents() {
+		return this.publishRequestHandledEvents;
+	}
+
+	public void setPublishRequestHandledEvents(boolean publishRequestHandledEvents) {
+		this.publishRequestHandledEvents = publishRequestHandledEvents;
+	}
+
 	public boolean isThrowExceptionIfNoHandlerFound() {
 		return this.throwExceptionIfNoHandlerFound;
 	}
@@ -207,8 +220,7 @@ public class WebMvcProperties {
 
 		/**
 		 * Amount of time before asynchronous request handling times out. If this value is
-		 * not set, the default timeout of the underlying implementation is used, e.g. 10
-		 * seconds on Tomcat with Servlet 3.
+		 * not set, the default timeout of the underlying implementation is used.
 		 */
 		private Duration requestTimeout;
 

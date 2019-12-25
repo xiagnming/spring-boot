@@ -165,7 +165,7 @@ class MongoDataAutoConfigurationTests {
 	void backsOffIfMongoClientBeanIsNotPresent() {
 		ApplicationContextRunner runner = new ApplicationContextRunner()
 				.withConfiguration(AutoConfigurations.of(MongoDataAutoConfiguration.class));
-		runner.run((context) -> assertThat(context).doesNotHaveBean(MongoDataAutoConfiguration.class));
+		runner.run((context) -> assertThat(context).doesNotHaveBean(MongoTemplate.class));
 	}
 
 	@Test
@@ -182,6 +182,12 @@ class MongoDataAutoConfigurationTests {
 			MongoDbFactory dbFactory = context.getBean(MongoDbFactory.class);
 			assertThat(dbFactory).isInstanceOf(SimpleMongoClientDbFactory.class);
 		});
+	}
+
+	@Test
+	void autoConfiguresIfUserProvidesMongoDbFactoryButNoClient() {
+		this.contextRunner.withUserConfiguration(MongoDbFactoryConfiguration.class)
+				.run((context) -> assertThat(context).hasSingleBean(MongoTemplate.class));
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -212,6 +218,16 @@ class MongoDataAutoConfigurationTests {
 		@Bean
 		com.mongodb.client.MongoClient fallbackMongoClient() {
 			return MongoClients.create();
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class MongoDbFactoryConfiguration {
+
+		@Bean
+		MongoDbFactory mongoDbFactory() {
+			return new SimpleMongoClientDbFactory(MongoClients.create(), "test");
 		}
 
 	}

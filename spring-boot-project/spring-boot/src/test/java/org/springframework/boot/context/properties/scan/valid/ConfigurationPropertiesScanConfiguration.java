@@ -17,11 +17,12 @@ package org.springframework.boot.context.properties.scan.valid;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.context.properties.scan.valid.b.BScanConfiguration;
 
 /**
- * Used for testing {@link ConfigurationProperties} scanning.
+ * Used for testing {@link ConfigurationProperties @ConfigurationProperties} scanning.
  *
  * @author Madhura Bhave
  */
@@ -45,6 +46,7 @@ public class ConfigurationPropertiesScanConfiguration {
 
 	}
 
+	@ConstructorBinding
 	@ConfigurationProperties(prefix = "bar")
 	static class BarProperties {
 

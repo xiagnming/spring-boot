@@ -27,6 +27,7 @@ import java.util.UUID;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -59,6 +60,13 @@ class ExplodedArchiveTests {
 		createArchive();
 	}
 
+	@AfterEach
+	void tearDown() throws Exception {
+		if (this.archive != null) {
+			this.archive.close();
+		}
+	}
+
 	private void createArchive() throws Exception {
 		createArchive(null);
 	}
@@ -66,7 +74,6 @@ class ExplodedArchiveTests {
 	private void createArchive(String folderName) throws Exception {
 		File file = new File(this.tempDir, "test.jar");
 		TestJarCreator.createTestJar(file);
-
 		this.rootFolder = (StringUtils.hasText(folderName) ? new File(this.tempDir, folderName)
 				: new File(this.tempDir, UUID.randomUUID().toString()));
 		JarFile jarFile = new JarFile(file);
@@ -94,7 +101,7 @@ class ExplodedArchiveTests {
 	@Test
 	void getEntries() {
 		Map<String, Archive.Entry> entries = getEntriesMap(this.archive);
-		assertThat(entries.size()).isEqualTo(12);
+		assertThat(entries).hasSize(12);
 	}
 
 	@Test
@@ -113,7 +120,7 @@ class ExplodedArchiveTests {
 		Entry entry = getEntriesMap(this.archive).get("nested.jar");
 		Archive nested = this.archive.getNestedArchive(entry);
 		assertThat(nested.getUrl().toString()).isEqualTo(this.rootFolder.toURI() + "nested.jar");
-		((JarFileArchive) nested).close();
+		nested.close();
 	}
 
 	@Test
@@ -126,44 +133,49 @@ class ExplodedArchiveTests {
 	}
 
 	@Test
-	void getNonRecursiveEntriesForRoot() {
-		ExplodedArchive archive = new ExplodedArchive(new File("/"), false);
-		Map<String, Archive.Entry> entries = getEntriesMap(archive);
-		assertThat(entries.size()).isGreaterThan(1);
+	void getNonRecursiveEntriesForRoot() throws Exception {
+		try (ExplodedArchive explodedArchive = new ExplodedArchive(new File("/"), false)) {
+			Map<String, Archive.Entry> entries = getEntriesMap(explodedArchive);
+			assertThat(entries.size()).isGreaterThan(1);
+		}
 	}
 
 	@Test
 	void getNonRecursiveManifest() throws Exception {
-		ExplodedArchive archive = new ExplodedArchive(new File("src/test/resources/root"));
-		assertThat(archive.getManifest()).isNotNull();
-		Map<String, Archive.Entry> entries = getEntriesMap(archive);
-		assertThat(entries.size()).isEqualTo(4);
+		try (ExplodedArchive explodedArchive = new ExplodedArchive(new File("src/test/resources/root"))) {
+			assertThat(explodedArchive.getManifest()).isNotNull();
+			Map<String, Archive.Entry> entries = getEntriesMap(explodedArchive);
+			assertThat(entries.size()).isEqualTo(4);
+		}
 	}
 
 	@Test
 	void getNonRecursiveManifestEvenIfNonRecursive() throws Exception {
-		ExplodedArchive archive = new ExplodedArchive(new File("src/test/resources/root"), false);
-		assertThat(archive.getManifest()).isNotNull();
-		Map<String, Archive.Entry> entries = getEntriesMap(archive);
-		assertThat(entries.size()).isEqualTo(3);
+		try (ExplodedArchive explodedArchive = new ExplodedArchive(new File("src/test/resources/root"), false)) {
+			assertThat(explodedArchive.getManifest()).isNotNull();
+			Map<String, Archive.Entry> entries = getEntriesMap(explodedArchive);
+			assertThat(entries.size()).isEqualTo(3);
+		}
 	}
 
 	@Test
 	void getResourceAsStream() throws Exception {
-		ExplodedArchive archive = new ExplodedArchive(new File("src/test/resources/root"));
-		assertThat(archive.getManifest()).isNotNull();
-		URLClassLoader loader = new URLClassLoader(new URL[] { archive.getUrl() });
-		assertThat(loader.getResourceAsStream("META-INF/spring/application.xml")).isNotNull();
-		loader.close();
+		try (ExplodedArchive explodedArchive = new ExplodedArchive(new File("src/test/resources/root"))) {
+			assertThat(explodedArchive.getManifest()).isNotNull();
+			URLClassLoader loader = new URLClassLoader(new URL[] { explodedArchive.getUrl() });
+			assertThat(loader.getResourceAsStream("META-INF/spring/application.xml")).isNotNull();
+			loader.close();
+		}
 	}
 
 	@Test
 	void getResourceAsStreamNonRecursive() throws Exception {
-		ExplodedArchive archive = new ExplodedArchive(new File("src/test/resources/root"), false);
-		assertThat(archive.getManifest()).isNotNull();
-		URLClassLoader loader = new URLClassLoader(new URL[] { archive.getUrl() });
-		assertThat(loader.getResourceAsStream("META-INF/spring/application.xml")).isNotNull();
-		loader.close();
+		try (ExplodedArchive explodedArchive = new ExplodedArchive(new File("src/test/resources/root"), false)) {
+			assertThat(explodedArchive.getManifest()).isNotNull();
+			URLClassLoader loader = new URLClassLoader(new URL[] { explodedArchive.getUrl() });
+			assertThat(loader.getResourceAsStream("META-INF/spring/application.xml")).isNotNull();
+			loader.close();
+		}
 	}
 
 	private Map<String, Archive.Entry> getEntriesMap(Archive archive) {
